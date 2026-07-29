@@ -133,6 +133,11 @@ class DatabaseHelper {
     await db.delete('diary_entries', where: "id = ${entry.id}");
   }
 
+  Future<void> updateEntry(DiaryEntry entry) async {
+    final db = await database;
+    await db.update('diary_entries', entry.toMap(), where: "id = ${entry.id}");
+  }
+
   Future<List<DiaryEntry>> getEntriesForDate(DateTime date) async {
     final db = await database;
     final dateStr = date.toIso8601String().split('T')[0];

@@ -1,198 +1,171 @@
 import 'package:flutter/material.dart';
 import 'package:local_ai_calorie_app/model/diary_entry.dart';
-import 'package:local_ai_calorie_app/model/food.dart';
-import 'package:local_ai_calorie_app/services/database_service.dart';
 
-class DiaryAddFoodCalcModal extends StatefulWidget {
-  final Food food;
-  final MealType mealType;
-  final VoidCallback onFoodRemoved;
-  final ValueChanged<DiaryEntry> onFoodAddedToDiary;
+enum DiaryEditorMode { create, edit }
+
+class DiaryEditorModal extends StatefulWidget {
+  final DiaryEntry diaryEntry;
+  final DiaryEditorMode mode;
+  final ValueChanged<DiaryEntry> onSave;
+  final VoidCallback? onDelete;
+
+  const DiaryEditorModal({
+    super.key,
+    required this.diaryEntry,
+    required this.mode,
+    required this.onSave,
+    this.onDelete,
+  });
 
   @override
-  State<DiaryAddFoodCalcModal> createState() => _DiaryAddFoodCalcModalState();
-
-  const DiaryAddFoodCalcModal(
-    {super.key, 
-    required this.food, 
-    required this.onFoodRemoved, 
-    required this.onFoodAddedToDiary, 
-    required this.mealType});
-
+  State<DiaryEditorModal> createState() => _DiaryEditorModalState();
 }
 
-class _DiaryAddFoodCalcModalState extends State<DiaryAddFoodCalcModal> {
-
+class _DiaryEditorModalState extends State<DiaryEditorModal> {
   late final TextEditingController _caloriesController;
   late final TextEditingController _gramsController;
-  late DiaryEntry diaryEntry;  
-  bool settingGrams = true;
+  late DiaryEntry _workingEntry;
 
   @override
-  void initState(){
-
-    diaryEntry = 
-        DiaryEntry(id: -1, 
-        date: DateTime.now(), 
-        mealType: widget.mealType, 
-        foodName: widget.food.name,
-        foodId: widget.food.id,
-        calories: widget.food.calories,
-        grams: widget.food.grams,
-        carbs: widget.food.carbs,
-        sugars: widget.food.sugars,
-        fiber: widget.food.fiber,
-        fat: widget.food.fat,
-        saturatedFat: widget.food.saturatedFat,
-        protein: widget.food.protein,
-        foodCalories: widget.food.calories,
-        foodGrams: widget.food.grams,
-        foodCarbs: widget.food.carbs,
-        foodSugars: widget.food.sugars,
-        foodFiber: widget.food.fiber,
-        foodFat: widget.food.fat,
-        foodSaturatedFat: widget.food.saturatedFat,
-        foodProtein: widget.food.protein);
-
-    _caloriesController = TextEditingController(text: diaryEntry.calories.toString());
-    _gramsController = TextEditingController(text: diaryEntry.grams.toString());
-
+  void initState() {
     super.initState();
+    // Clone or reference the entry so edits don't mutate state prematurely
+    _workingEntry = widget.diaryEntry;
+    _caloriesController = TextEditingController(text: _workingEntry.calories.toString());
+    _gramsController = TextEditingController(text: _workingEntry.grams.toString());
   }
 
   @override
   void dispose() {
-    _gramsController.dispose();
     _caloriesController.dispose();
+    _gramsController.dispose();
     super.dispose();
   }
 
-  void setGrams(double grams) {
-    settingGrams = true;
+  void _updateGrams(double grams) {
     setState(() {
-      if (settingGrams){
-        diaryEntry.grams = grams;
-        diaryEntry.calculateAllValuesFromGrams();
-        _caloriesController.text = diaryEntry.calories.toString();
-      }
+      _workingEntry.grams = grams;
+      _workingEntry.calculateAllValuesFromGrams();
+      _caloriesController.text = _workingEntry.calories.toString();
     });
-  }
-  
-  void setCalories(double kcal) {
-
-  }
-
-  void addToDiary(){
-    DatabaseHelper.instance.insertEntry(diaryEntry);
-    Navigator.of(context).pop();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return 
+Widget build(BuildContext context) {
+  return Column(
+    mainAxisSize: MainAxisSize.min, // Hugs the content vertically
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      // Header
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Add Entry',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
 
-    Column(
-      children: [
-          Row(
-          children: [
-            const Spacer(),
-            Expanded(child: OutlinedButton.icon(
-                onPressed: widget.onFoodRemoved,
-                icon: const Icon(Icons.arrow_back, size: 18),
-                label: const Text('back'),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size.fromHeight(44),
-                ),
-              ),
-            )
-          ],
-        ),
-        Text(widget.food.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight(600), color: Colors.black),),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _caloriesController,
-                keyboardType: TextInputType.number,
-                enabled: false,
-                style: const TextStyle(color: Colors.black),
-                decoration: const InputDecoration(
-                  labelText: 'kcal',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  final parsed = double.tryParse(value) ?? 0.0;
-                  setCalories(parsed);
-                },
+      // Food Title
+      Text(
+        widget.diaryEntry.foodName,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      const SizedBox(height: 16),
+
+      // Input Fields
+      Row(
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: _caloriesController,
+              enabled: false,
+              decoration: const InputDecoration(
+                labelText: 'Calories',
+                suffixText: 'kcal',
+                border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(width: 5),
-            Expanded(
-              child: TextFormField(
-                controller: _gramsController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'g',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  final parsed = double.tryParse(value) ?? 0.0;
-                  setGrams(parsed);
-                },
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: _gramsController,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Serving',
+                suffixText: 'g',
+                border: OutlineInputBorder(),
               ),
+              onChanged: (value) {
+                final parsed = double.tryParse(value) ?? 0.0;
+                _updateGrams(parsed);
+              },
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
 
-        Column(
+      // Macro Display Box
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5), 
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
           children: [
-            // Row 1
             Row(
               children: [
-                Expanded(child: _buildMacroTile("Carbs", diaryEntry.carbs)),
-                Expanded(child: _buildMacroTile("Sugar", diaryEntry.sugars)),
-                Expanded(child: _buildMacroTile("Fiber", diaryEntry.fiber)),
+                Expanded(child: _buildMacroTile("Carbs", widget.diaryEntry.carbs)),
+                Expanded(child: _buildMacroTile("Sugar", widget.diaryEntry.sugars)),
+                Expanded(child: _buildMacroTile("Fiber", widget.diaryEntry.fiber)),
               ],
             ),
             const SizedBox(height: 12),
-            // Row 2
             Row(
               children: [
-                Expanded(child: _buildMacroTile("Fat", diaryEntry.fat)),
-                Expanded(child: _buildMacroTile("Sat. Fat", diaryEntry.saturatedFat)),
-                Expanded(child: _buildMacroTile("Protein", diaryEntry.protein)),
+                Expanded(child: _buildMacroTile("Fat", widget.diaryEntry.fat)),
+                Expanded(child: _buildMacroTile("Sat. Fat", widget.diaryEntry.saturatedFat)),
+                Expanded(child: _buildMacroTile("Protein", widget.diaryEntry.protein)),
               ],
             ),
           ],
         ),
-        Spacer(),
-        FilledButton.icon(
-          onPressed: (){widget.onFoodAddedToDiary(diaryEntry);},
-          icon: const Icon(Icons.save, size: 18),
-          label: Text('add to ${widget.mealType.name}'),
-          style: TextButton.styleFrom(
-            minimumSize: const Size.fromHeight(44),
-          ),
+      ),
+      const SizedBox(height: 20),
+
+      // Action Button
+      FilledButton.icon(
+        onPressed: () {
+          widget.onSave(widget.diaryEntry);
+        },
+        icon: const Icon(Icons.add, size: 18),
+        label: Text('Add to ${widget.diaryEntry.mealType.name}'),
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildMacroTile(String label, dynamic value) {
+    final formattedValue = value is double ? value.toStringAsFixed(1) : value.toString();
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          "$label:",
-          style: const TextStyle(color: Colors.blueGrey, fontSize: 13),
-        ),
+        Text(label, style: const TextStyle(color: Colors.blueGrey, fontSize: 12)),
         const SizedBox(height: 2),
-        Text(
-          value.toString(),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
+        Text('${formattedValue}g', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       ],
     );
   }
-
 }

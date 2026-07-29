@@ -55,9 +55,10 @@ class _DiarySectionState extends State<DiarySection> {
     await showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (BuildContext context) => DiaryAddEntryModal(widget.mealType),
+      builder: (BuildContext context) => DiaryAddEntryModal(widget.mealType, widget.selectedDate),
     );
     refresh();
+    widget.onAddPressed();
   }
   
   void addFoodFromText() {
@@ -68,9 +69,10 @@ class _DiarySectionState extends State<DiarySection> {
     await showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (BuildContext context) => DiaryAddEntryModal(widget.mealType),
+      builder: (BuildContext context) => DiaryAddEntryModal(widget.mealType, widget.selectedDate),
     );
     refresh();
+    widget.onAddPressed();
   }
   
   void onRowLongPress(DiaryEntry entry) async {
@@ -82,6 +84,7 @@ class _DiarySectionState extends State<DiarySection> {
       setState(() {
         refresh();
       });
+      widget.onAddPressed();
     }
   }
 

@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:local_ai_calorie_app/model/food.dart';
 
 enum MealType {
   breakfast,
@@ -84,6 +85,36 @@ class DiaryEntry {
     this.foodSaturatedFat = 0.0, 
     this.foodProtein = 0.0
     });
+
+  factory DiaryEntry.fromFood({
+    required Food food,
+    required MealType mealType,
+    required DateTime date,
+  }) {
+    return DiaryEntry(
+      id: -1,
+      mealType: mealType,
+      date: date,
+      foodName: food.name,
+      foodId: food.id,
+      calories: food.calories,
+      grams: food.grams,
+      carbs: food.carbs,
+      sugars: food.sugars,
+      fiber: food.fiber,
+      fat: food.fat,
+      saturatedFat: food.saturatedFat,
+      protein: food.protein,
+      foodCalories: food.calories,
+      foodGrams: food.grams,
+      foodCarbs: food.carbs,
+      foodSugars: food.sugars,
+      foodFiber: food.fiber,
+      foodFat: food.fat,
+      foodSaturatedFat: food.saturatedFat,
+      foodProtein: food.protein,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
