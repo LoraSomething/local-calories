@@ -20,7 +20,7 @@ class _DiaryAddEntryModalState extends State<DiaryAddEntryModal> {
   @override
   Widget build(BuildContext context) {
 
-    final double screenHeight = MediaQuery.of(context).size.height * 0.7;
+    final double screenHeight = MediaQuery.of(context).size.height * 0.5;
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Dialog(
@@ -55,4 +55,5 @@ class _DiaryAddEntryModalState extends State<DiaryAddEntryModal> {
       ),
     );
   }
+
 }

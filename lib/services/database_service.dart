@@ -118,10 +118,19 @@ class DatabaseHelper {
     return maps.map((map) => Food.fromMap(map)).toList();
   }
 
+  Future<void> deleteFood(Food food) async {
+    final db = await database;
+    await db.delete('foods', where: "id = ${food.id}");
+  }
 
   Future<int> insertEntry(DiaryEntry entry) async {
     final db = await database;
     return await db.insert('diary_entries', entry.toMap());
+  }
+
+  Future<void> deleteEntry(DiaryEntry entry) async {
+    final db = await database;
+    await db.delete('diary_entries', where: "id = ${entry.id}");
   }
 
   Future<List<DiaryEntry>> getEntriesForDate(DateTime date) async {

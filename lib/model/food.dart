@@ -53,4 +53,42 @@ class Food {
       protein: map['protein'] != null ? (map['protein'] as num).toDouble() : null,
     );
   }
+
+  factory Food.fromJson(Map<String, dynamic> json) {
+    // Helper to safely parse numbers, strings, or missing keys into a valid double
+    double _parseNum(List<String> possibleKeys) {
+      for (final key in possibleKeys) {
+        if (json.containsKey(key) && json[key] != null) {
+          final val = json[key];
+          
+          // 1. If it's already a number
+          if (val is num) return val.toDouble();
+          
+          // 2. If it's a string (e.g., "150.0", "1 potato", "150g")
+          if (val is String) {
+            // Strip everything except numbers and decimal points
+            final clean = val.replaceAll(RegExp(r'[^0-9.]'), '');
+            final parsed = double.tryParse(clean);
+            if (parsed != null) return parsed;
+          }
+        }
+      }
+      return 0.0; // Default fallback if key is missing or unparseable
+    }
+
+    return Food(
+      id: -1,
+      name: json['name'] is String ? json['name'] as String : "",
+      grams: json['grams'] is int ? json['grams'] as double : 100,
+      
+      // Checks primary key AND fallback key names in case LLM drops the suffix
+      calories: _parseNum(['calories_kcal', 'calories', 'kcal']),
+      carbs: _parseNum(['carbohydrates_g', 'carbohydrates', 'carbs']),
+      sugars: _parseNum(['sugars_g', 'sugars']),
+      fiber: _parseNum(['fiber_g', 'fiber']),
+      fat: _parseNum(['fat_g', 'fat']),
+      saturatedFat: _parseNum(['saturated_fat_g', 'saturated_fat', 'saturatedFat']),
+      protein: _parseNum(['protein_g', 'protein']),
+    );
+  }
 }

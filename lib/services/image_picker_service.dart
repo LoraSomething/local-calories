@@ -8,39 +8,39 @@ class ImagePickerService {
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<File?> pickAndCropImage(BuildContext context) async {
-    // Step 1: Prompt user for image source
-    final ImageSource? source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
-                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Take a Photo'),
-                onTap: () => Navigator.of(context).pop(ImageSource.camera),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+   Future<File?> pickAndCropImage(BuildContext context, ImageSource imageSource) async {
+  //   // Step 1: Prompt user for image source
+  //   final ImageSource? source = await showModalBottomSheet<ImageSource>(
+  //     context: context,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+  //     ),
+  //     builder: (BuildContext context) {
+  //       return SafeArea(
+  //         child: Wrap(
+  //           children: [
+  //             ListTile(
+  //               leading: const Icon(Icons.photo_library),
+  //               title: const Text('Choose from Gallery'),
+  //               onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+  //             ),
+  //             ListTile(
+  //               leading: const Icon(Icons.photo_camera),
+  //               title: const Text('Take a Photo'),
+  //               onTap: () => Navigator.of(context).pop(ImageSource.camera),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
 
     // If the user dismissed the bottom sheet, stop execution
-    if (source == null) return null;
+    if (imageSource == null) return null;
 
     // Step 2: Pick the image from the selected source
     final XFile? pickedFile = await _picker.pickImage(
-      source: source,
+      source: imageSource,
       maxHeight: 1000,
       maxWidth: 1000,
       imageQuality: 80,

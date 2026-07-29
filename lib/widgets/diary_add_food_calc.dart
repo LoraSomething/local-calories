@@ -95,16 +95,7 @@ class _DiaryAddFoodCalcModalState extends State<DiaryAddFoodCalcModal> {
       children: [
           Row(
           children: [
-            Expanded(child: OutlinedButton.icon(
-                onPressed: widget.onFoodRemoved,
-                icon: const Icon(Icons.camera, size: 18),
-                label: const Text('AI parse'),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size.fromHeight(44),
-                ),
-              ),
-            ),
-            const SizedBox(width: 5),
+            const Spacer(),
             Expanded(child: OutlinedButton.icon(
                 onPressed: widget.onFoodRemoved,
                 icon: const Icon(Icons.arrow_back, size: 18),

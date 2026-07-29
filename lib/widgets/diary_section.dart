@@ -57,10 +57,32 @@ class _DiarySectionState extends State<DiarySection> {
       barrierDismissible: true,
       builder: (BuildContext context) => DiaryAddEntryModal(widget.mealType),
     );
+    refresh();
   }
   
   void addFoodFromText() {
 
+  }
+
+  void onRowTapped(DiaryEntry entry) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) => DiaryAddEntryModal(widget.mealType),
+    );
+    refresh();
+  }
+  
+  void onRowLongPress(DiaryEntry entry) async {
+    final shouldDelete = await showDeleteDialog(context, entry.foodName);
+
+    // 2. Check if the user clicked "Yes"
+    if (shouldDelete) {
+      DatabaseHelper.instance.deleteEntry(entry);
+      setState(() {
+        refresh();
+      });
+    }
   }
 
   @override
@@ -156,7 +178,12 @@ class _DiarySectionState extends State<DiarySection> {
                   ),
                 )
               else
-                ...entries.map((entry) => DiaryRow(entry: entry)),
+                ...entries.map((entry) => 
+                DiaryRow(
+                  entry: entry,
+                  onTap: (value){onRowTapped(value);},
+                  onLongPress: (value){onRowLongPress(value);},
+                  )),
 
               Divider(height: 1, color: accentColor),
 
@@ -191,5 +218,38 @@ class _DiarySectionState extends State<DiarySection> {
         );
       },
     );
+  }
+
+  Future<bool> showDeleteDialog(BuildContext context, String foodName) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Food'),
+          content: Text('Are you sure you want to delete $foodName?'),
+          actions: [
+            // "No" / Cancel Button
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Close dialog & return false
+              },
+              child: const Text('No'),
+            ),
+            
+            // "Yes" / Delete Button
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red, // Make delete action red
+              ),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Close dialog & return true
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
   }
 }

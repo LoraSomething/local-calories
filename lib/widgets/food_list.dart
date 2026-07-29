@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:local_ai_calorie_app/model/food.dart';
+import 'package:local_ai_calorie_app/widgets/food_list_add.dart';
 import 'package:local_ai_calorie_app/widgets/food_modal.dart';
 import 'package:local_ai_calorie_app/services/database_service.dart';
 
@@ -102,12 +103,12 @@ class FoddListState extends State<FoodList> {
           },
         ) 
       ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            await foodAdd(context);
-          },
-          child: const Icon(Icons.add), //TODO - make a popup for the food add UI
-        ),
+      floatingActionButton: 
+        FoodAddButton(onFoodAdded: () {
+          setState(() {
+            foods = DatabaseHelper.instance.getFoods();
+          });
+        },)
     );
   }
 }
