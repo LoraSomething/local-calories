@@ -11,6 +11,9 @@ class Food {
   double? saturatedFat;
   double? protein;
 
+  final DateTime? lastUsedAt;
+  final double? lastUsedQuantity;
+
   Food(
     {required this.id, 
     required this.name, 
@@ -21,7 +24,9 @@ class Food {
     this.fiber = 0.0, 
     this.fat = 0.0, 
     this.saturatedFat = 0.0, 
-    this.protein = 0.0});
+    this.protein = 0.0, 
+    this.lastUsedAt, 
+    this.lastUsedQuantity});
 
     Map<String, dynamic> toMap() {
     return {
@@ -51,6 +56,10 @@ class Food {
           ? (map['saturated_fat'] as num).toDouble()
           : null,
       protein: map['protein'] != null ? (map['protein'] as num).toDouble() : null,
+      lastUsedAt: map['lastUsedAt'] != null 
+          ? DateTime.parse(map['lastUsedAt'] as String) 
+          : null,
+      lastUsedQuantity: map['lastUsedQuantity'] != null ? (map['lastUsedQuantity'] as num).toDouble() : null,
     );
   }
 

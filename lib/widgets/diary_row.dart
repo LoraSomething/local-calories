@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:local_ai_calorie_app/model/diary_entry.dart';
 import 'package:local_ai_calorie_app/services/database_service.dart';
 import 'package:local_ai_calorie_app/widgets/diary_add_food_calc.dart';
-import 'package:local_ai_calorie_app/widgets/reusables/app_notification.dart';
 
 class DiaryRow extends StatelessWidget {
   final DiaryEntry entry;

@@ -91,7 +91,7 @@ class DiaryEntry {
     required MealType mealType,
     required DateTime date,
   }) {
-    return DiaryEntry(
+    DiaryEntry entry = DiaryEntry(
       id: -1,
       mealType: mealType,
       date: date,
@@ -114,6 +114,11 @@ class DiaryEntry {
       foodSaturatedFat: food.saturatedFat,
       foodProtein: food.protein,
     );
+    if (food.lastUsedQuantity != null && food.lastUsedQuantity != 0){
+      entry.grams = food.lastUsedQuantity;
+      entry.calculateAllValuesFromGrams();      
+    }
+    return entry;
   }
 
   Map<String, dynamic> toMap() {
@@ -131,14 +136,14 @@ class DiaryEntry {
       'fat': fat,
       'saturated_fat': saturatedFat,
       'protein': protein,
-      'foodCalories': calories,
-      'foodGrams': grams,
-      'foodCarbs': carbs,
-      'foodSugars': sugars,
-      'foodFiber': fiber,
-      'foodFat': fat,
-      'foodSaturated_fat': saturatedFat,
-      'foodProtein': protein,
+      'foodCalories': foodCalories,
+      'foodGrams': foodGrams,
+      'foodCarbs': foodCarbs,
+      'foodSugars': foodSugars,
+      'foodFiber': foodFiber,
+      'foodFat': foodFat,
+      'foodSaturated_fat': foodSaturatedFat,
+      'foodProtein': foodProtein,
     };
   }
 

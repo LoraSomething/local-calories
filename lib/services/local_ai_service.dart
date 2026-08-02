@@ -52,10 +52,20 @@ class LocalAiService {
       isUser: true
     );
 
-    final chat = await inferenceModel!.createChat(temperature: 0.0, topK: 1);
+    final chat = await inferenceModel.createChat(temperature: 0.8, topK: 1, isThinking: true);
     await chat.addQueryChunk(message);
 
-    final response = await chat.generateChatResponse();
+    //final response = await chat.generateChatResponse();
+    String response = "";
+
+    final textStream = chat
+    .generateChatResponseAsync()
+    .where((response) => response is TextResponse)
+    .map((response) => (response as TextResponse).token);
+
+    await for (final textToken in textStream) {
+      response += textToken;
+    }
     
     RegExp jsonRegex = RegExp(r'\{[\s\S]*\}');
     Match? match = jsonRegex.firstMatch(response.toString());
@@ -74,10 +84,20 @@ class LocalAiService {
       isUser: true
     );
 
-    final chat = await inferenceModel!.createChat(temperature: 0.0, topK: 1);
+    final chat = await inferenceModel.createChat(temperature: 0.8, topK: 1, isThinking: true);
     await chat.addQueryChunk(message);
 
-    final response = await chat.generateChatResponse();
+    //final response = await chat.generateChatResponse();
+    String response = "";
+
+    final textStream = chat
+    .generateChatResponseAsync()
+    .where((response) => response is TextResponse)
+    .map((response) => (response as TextResponse).token);
+
+    await for (final textToken in textStream) {
+      response += textToken;
+    }
 
     RegExp jsonRegex = RegExp(r'\{[\s\S]*\}');
     Match? match = jsonRegex.firstMatch(response.toString());

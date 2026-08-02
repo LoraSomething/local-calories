@@ -234,4 +234,37 @@ class _AddFoodModalState extends State<FoodModal> {
       ),
     );
   }
+
+  Future<bool> showDeleteDialog(BuildContext context, String foodName) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Food'),
+          content: Text('Are you sure you want to delete $foodName?'),
+          actions: [
+            // "No" / Cancel Button
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Close dialog & return false
+              },
+              child: const Text('No'),
+            ),
+            
+            // "Yes" / Delete Button
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red, // Make delete action red
+              ),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Close dialog & return true
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
 }

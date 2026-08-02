@@ -112,10 +112,34 @@ class DatabaseHelper {
 
   Future<List<Food>> getFoods() async {
     final db = await database;
-    final maps = await db.query(
-      'foods',
-    );
-    return maps.map((map) => Food.fromMap(map)).toList();
+
+    final rawList = await db.rawQuery('''
+        SELECT 
+        f.*,
+        (
+          SELECT date 
+          FROM diary_entries 
+          WHERE food_id = f.id 
+          ORDER BY date DESC 
+          LIMIT 1
+        ) AS lastUsedAt,
+        (
+          SELECT grams 
+          FROM diary_entries 
+          WHERE food_id = f.id 
+          ORDER BY date DESC 
+          LIMIT 1
+        ) AS lastUsedQuantity
+      FROM foods f
+      ORDER BY lastUsedAt DESC NULLS LAST, f.name ASC;
+      ''');
+
+    return rawList.map((json) => Food.fromMap(json)).toList();
+
+    // final maps = await db.query(
+    //   'foods',
+    // );
+    // return maps.map((map) => Food.fromMap(map)).toList();
   }
 
   Future<void> deleteFood(Food food) async {

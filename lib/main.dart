@@ -4,7 +4,7 @@ import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
 import 'package:local_ai_calorie_app/globals.dart';
 import 'package:local_ai_calorie_app/widgets/debug.dart';
 import 'package:local_ai_calorie_app/widgets/diary_main_screen.dart';
-import 'package:local_ai_calorie_app/widgets/diary_main_screen_containter.dart';
+import 'package:local_ai_calorie_app/widgets/diary_main_screen_container.dart';
 import 'package:local_ai_calorie_app/widgets/food_list.dart';
 
 void main() {
