@@ -54,7 +54,7 @@ class _DiarySectionState extends State<DiarySection> {
   void addFood() async {
     await showDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: false,
       builder: (BuildContext context) => DiaryAddEntryModal(widget.mealType, widget.selectedDate),
     );
     refresh();

@@ -23,6 +23,7 @@ class DiaryRow extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: DiaryEditorModal(

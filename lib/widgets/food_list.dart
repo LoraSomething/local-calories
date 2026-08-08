@@ -139,6 +139,7 @@ class FoddListState extends State<FoodList> {
                         confirmDismiss: (direction) async {
                           return await showDialog<bool>(
                             context: context,
+                            barrierDismissible: false,
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 title: const Text('Delete Food'),
