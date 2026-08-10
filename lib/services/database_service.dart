@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:local_ai_calorie_app/model/diary_entry.dart';
 import 'package:local_ai_calorie_app/model/food.dart';
 import 'package:sqflite/sqflite.dart';
@@ -175,6 +176,23 @@ class DatabaseHelper {
     return maps.map((map) => DiaryEntry.fromMap(map)).toList();
   }
 
+  Future<List<DiaryEntry>> getEntriesForDates(DateTime startDate, DateTime endDate) async {
+    final db = await database;
+    final startDateStr = startDate.toIso8601String().split('T')[0];
+    final endDateStr = endDate.add(Duration(days: 1)).toIso8601String().split('T')[0];
+
+    //debugPrint("startDateStr $startDateStr");
+    //debugPrint("endDateStr $endDateStr");
+    
+    final maps = await db.query(
+      'diary_entries',
+      where: 'date >= ? and date <= ?',
+      whereArgs: [startDateStr, endDateStr],
+    );
+
+    return maps.map((map) => DiaryEntry.fromMap(map)).toList();
+  }
+
   Future<List<DiaryEntry>> getEntriesByMealAndDate(DateTime date, MealType mealType) async {
     final db = await database;
     final dateStr = date.toIso8601String().split('T')[0];
@@ -186,5 +204,49 @@ class DatabaseHelper {
     );
 
     return maps.map((map) => DiaryEntry.fromMap(map)).toList();
+  }
+
+  Future<List<({
+  DateTime date,
+  double calories,
+  double carbs,
+  double sugars,
+  double fiber,
+  double fat,
+  double saturatedFat,
+  double protein
+  })>> getMacroTotalsForDates(DateTime startDate, DateTime endDate) async {
+    final db = await database;
+    
+    final startDateStr = startDate.toIso8601String().split('T')[0];
+    // Next day bound for exclusive upper limit
+    final endDateStr = endDate.add(const Duration(days: 1)).toIso8601String().split('T')[0];
+
+    final rawList = await db.rawQuery('''
+      SELECT 
+        date(diary_entries.date) as date,
+        SUM(diary_entries.calories) as calories,
+        SUM(diary_entries.carbs) as carbs,
+        SUM(diary_entries.sugars) as sugars,
+        SUM(diary_entries.fiber) as fiber,
+        SUM(diary_entries.fat) as fat,
+        SUM(diary_entries.saturated_fat) as saturatedFat,
+        SUM(diary_entries.protein) as protein
+      FROM diary_entries
+      WHERE date(diary_entries.date) >= ? AND date(diary_entries.date) < ?
+      GROUP BY date(diary_entries.date)
+      ORDER BY date ASC;
+    ''', [startDateStr, endDateStr]);
+
+    return rawList.map((row) => (
+      date: row['date'] != null ? DateTime.parse(row['date'].toString()) : DateTime.now(),
+      calories: (row['calories'] as num?)?.toDouble() ?? 0.0,
+      carbs: (row['carbs'] as num?)?.toDouble() ?? 0.0,
+      sugars: (row['sugars'] as num?)?.toDouble() ?? 0.0,
+      fiber: (row['fiber'] as num?)?.toDouble() ?? 0.0,
+      fat: (row['fat'] as num?)?.toDouble() ?? 0.0,
+      saturatedFat: (row['saturatedFat'] as num?)?.toDouble() ?? 0.0,
+      protein: (row['protein'] as num?)?.toDouble() ?? 0.0,
+    )).toList();
   }
 }

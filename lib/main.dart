@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gemma/flutter_gemma.dart';
 import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
 import 'package:local_ai_calorie_app/globals.dart';
+import 'package:local_ai_calorie_app/widgets/analytics.dart';
 import 'package:local_ai_calorie_app/widgets/debug.dart';
 import 'package:local_ai_calorie_app/widgets/diary_main_screen.dart';
 import 'package:local_ai_calorie_app/widgets/diary_main_screen_container.dart';
@@ -51,18 +52,21 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   
   int _currentIndex = 0;
+  final GlobalKey<AnalyticsState> _analyticsKey = GlobalKey<AnalyticsState>();
 
-  // List of root tab screens
-  final List<Widget> _screens = [
-    const DiaryScreenContainer(),
-    const Center(child: Text('Analytics Screen (Coming Soon)')),
-    FoodList(),
-    const Center(child: Text('Profile & Settings (Coming Soon)')),
-    DebugScreen()
-  ];
 
   @override
   Widget build(BuildContext context) {
+
+  // List of root tab screens
+    final List<Widget> _screens = [
+      const DiaryScreenContainer(),
+      Analytics(key: _analyticsKey),
+      FoodList(),
+      const Center(child: Text('Profile & Settings (Coming Soon)')),
+      DebugScreen()
+    ];
+
     return Scaffold(
       // IndexedStack preserves state (like scroll position) when switching tabs
       body: IndexedStack(
@@ -75,6 +79,9 @@ class _MyHomePageState extends State<MyHomePage> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 1) {
+            _analyticsKey.currentState?.loadData();
+          }
         },
         destinations: const [
           NavigationDestination(

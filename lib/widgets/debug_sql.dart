@@ -12,7 +12,21 @@ class SqlConsoleWidget extends StatefulWidget {
 
 class _SqlConsoleWidgetState extends State<SqlConsoleWidget> {
   final TextEditingController _queryController = TextEditingController(
-    text: "SELECT name, sql FROM sqlite_master WHERE type='table';",
+    text: '''
+      SELECT 
+        date(diary_entries.date) as date,
+        SUM(diary_entries.calories) as calories,
+        SUM(diary_entries.carbs) as carbs,
+        SUM(diary_entries.sugars) as sugars,
+        SUM(diary_entries.fiber) as fiber,
+        SUM(diary_entries.fat) as fat,
+        SUM(diary_entries.saturated_fat) as saturatedFat,
+        SUM(diary_entries.protein) as protein
+      FROM diary_entries
+      WHERE date(diary_entries.date) >= ? AND date(diary_entries.date) < ?
+      GROUP BY date(diary_entries.date)
+      ORDER BY date ASC;
+    ''',
   );
   String _resultOutput = '';
   bool _isLoading = false;
