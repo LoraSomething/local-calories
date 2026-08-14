@@ -4,9 +4,11 @@ import 'package:flutter_gemma_litertlm/flutter_gemma_litertlm.dart';
 import 'package:local_ai_calorie_app/globals.dart';
 import 'package:local_ai_calorie_app/widgets/analytics.dart';
 import 'package:local_ai_calorie_app/widgets/debug.dart';
-import 'package:local_ai_calorie_app/widgets/diary_main_screen.dart';
 import 'package:local_ai_calorie_app/widgets/diary_main_screen_container.dart';
 import 'package:local_ai_calorie_app/widgets/food_list.dart';
+import 'package:local_ai_calorie_app/widgets/settings.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
 
@@ -19,6 +21,9 @@ void main() {
     ],
     maxDownloadRetries: 10,
   );
+
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
 
   runApp(const MyApp());
 }
@@ -63,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
       const DiaryScreenContainer(),
       Analytics(key: _analyticsKey),
       FoodList(),
-      const Center(child: Text('Profile & Settings (Coming Soon)')),
+      SettingsPage(),
       DebugScreen()
     ];
 

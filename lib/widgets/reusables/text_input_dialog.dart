@@ -53,7 +53,7 @@ class InputDialog {
                 },
                 child: Text(cancelButtonText),
               ),
-              ElevatedButton(
+              FilledButton(
                 onPressed: () {
                   // Return trimmed text value on confirmation
                   Navigator.of(dialogContext).pop(controller.text.trim());

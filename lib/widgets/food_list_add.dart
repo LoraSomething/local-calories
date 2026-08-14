@@ -134,9 +134,8 @@ class _FoodAddButtonState extends State<FoodAddButton>
       }
       
       LoadingDialog.show(context, message: 'Processing text...');
-      final nutritionalValuesJson = await LocalAiService.getEstimatedValuesFromText(inferenceModel, result);
-      Map<String, dynamic> jsonMap = jsonDecode(nutritionalValuesJson);
-      food = Food.fromJson(jsonMap);
+      final nutritionalValues= await LocalAiService.getEstimatedValuesFromText(inferenceModel, result);
+      food = Food.fromMacrosString(nutritionalValues, result);
 
     } catch (e) {
         AppNotification.showError('Something went wrong: ${e.toString()}');

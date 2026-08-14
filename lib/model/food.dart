@@ -42,6 +42,12 @@ class Food {
     };
   }
 
+  Map<String, dynamic> toMap_FTS() {
+    return {
+      'name': name,
+    };
+  }
+
   factory Food.fromMap(Map<String, dynamic> map) {
     return Food(
       id: map['id'] as int,
@@ -100,4 +106,30 @@ class Food {
       protein: _parseNum(['protein_g', 'protein']),
     );
   }
+
+
+  factory Food.fromMacrosString(String macros, String foodName) {
+
+    final separatedMacros = macros.split(",");
+
+    double parseMacro(int index, {double defaultValue = 0.0}) {
+      if (index >= separatedMacros.length) return defaultValue;
+      return double.tryParse(separatedMacros[index].trim()) ?? defaultValue;
+    }
+
+    return Food(
+      id: -1,
+      name: foodName,
+      grams: 100,
+      
+      calories: parseMacro(0, defaultValue: 100.0),
+      carbs: parseMacro(1), 
+      sugars: parseMacro(2),
+      fiber: parseMacro(3),
+      fat: parseMacro(4),
+      saturatedFat: parseMacro(5),
+      protein: parseMacro(6),
+    );
+  }
+  
 }

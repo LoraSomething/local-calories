@@ -71,8 +71,8 @@ class DebugScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.pop(ctx);
               final dbPath = await getDatabasesPath();

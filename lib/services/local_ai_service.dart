@@ -80,26 +80,69 @@ class LocalAiService {
   static Future<String> getEstimatedValuesFromText (InferenceModel inferenceModel, String foods) async {
 
     final message = Message.text(
-      text: getFreeTextInstruction(foods),
+      text: getFoodEstimationFromTextInstruction(foods),
       isUser: true
     );
 
-    final chat = await inferenceModel.createChat(temperature: 0.8, topK: 1, isThinking: true);
+    // final chat = await inferenceModel.createChat(temperature: 0.8, topK: 1, isThinking: true);
+    // await chat.addQueryChunk(message);
+
+    // String response = "";
+
+    // final textStream = chat
+    // .generateChatResponseAsync()
+    // .where((response) => response is TextResponse)
+    // .map((response) => (response as TextResponse).token);
+
+    // await for (final textToken in textStream) {
+    //   response += textToken;
+    // }
+
+    final chat = await inferenceModel.createChat(temperature: 0.8, topK: 1, isThinking: false);
     await chat.addQueryChunk(message);
 
-    //final response = await chat.generateChatResponse();
-    String response = "";
+    final response = await chat.generateChatResponse();
 
-    final textStream = chat
-    .generateChatResponseAsync()
-    .where((response) => response is TextResponse)
-    .map((response) => (response as TextResponse).token);
+    return response.toString().replaceAll(RegExp(r'[^0-9.,]'), '');
+  }
 
-    await for (final textToken in textStream) {
-      response += textToken;
-    }
 
-    RegExp jsonRegex = RegExp(r'\{[\s\S]*\}');
+
+  static Future<String> getDiaryEntriesFromText (InferenceModel inferenceModel, String foods) async {
+
+    final message = Message.text(
+      text: getFreeTextDiaryInstruction(foods),
+      isUser: true
+    );
+
+    //THINKING
+    // final chat = await inferenceModel.createChat(temperature: 0.8, topK: 1, isThinking: true);
+    // await chat.addQueryChunk(message);
+
+    // String response = "";
+
+    // final textStream = chat
+    // .generateChatResponseAsync()
+    // .where((response) => response is TextResponse)
+    // .map((response) => (response as TextResponse).token);
+
+    // await for (final textToken in textStream) {
+    //   response += textToken;
+    // }
+
+    //NOT THINKING
+    final chat = await inferenceModel.createChat(
+      temperature: 0.1,
+      topK: 1, 
+      topP: 0.1, 
+      isThinking: false);
+    await chat.addQueryChunk(message);
+
+    final response = await chat.generateChatResponse();
+
+    return response.toString();
+
+    RegExp jsonRegex = RegExp(r'^\s*\[[\s\S]*\]\s*$');
     Match? match = jsonRegex.firstMatch(response.toString());
 
     if (match != null) {
@@ -109,6 +152,26 @@ class LocalAiService {
     }
   }
 
+
+  /// Simplified Gemma prompt: ONLY does weight estimation
+  // static Future<double> _askGemmaForGrams(String ingredientWithQuantity) async {
+  //   final prompt = '''
+  //   Convert the weight of this food item to numeric grams. Return ONLY a single number.
+  //   Item: "$ingredientWithQuantity"
+  //   Grams:''';
+
+  //   final response = await inferenceModel.createChat(
+  //     prompt: prompt,
+  //     temperature: 0.0,
+  //     topK: 1,
+  //   );
+
+  //   // Extract raw number from response
+  //   final numRegExp = RegExp(r'\d+(?:\.\d+)?');
+  //   final match = numRegExp.firstMatch(response ?? '');
+    
+  //   return double.tryParse(match?.group(0) ?? '0') ?? 0.0;
+  // }
 
   static String getLabelInstruction(){
     return
@@ -146,32 +209,44 @@ class LocalAiService {
   }
 
 
-  static String getFreeTextInstruction(String foods){
+  static String getFoodEstimationFromTextInstruction(String foods){
+
+    return """
+      Provide standard raw nutrition facts PER 100 GRAMS (USDA base value). 
+      Do NOT estimate per whole item/serving size.
+
+      Format: CALORIES,CARBS,SUGARS,FIBER,FAT,SATURATED FAT,PROTEIN
+      Return ONLY 7 numbers separated by commas.
+
+      Example 1 (Vegetable):
+      Item: "carrots, raw"
+      Output: 41,9.6,4.7,2.8,0.2,0.0,0.9
+
+      Example 2 (Fruit):
+      Item: "banana"
+      Output: 89,22.8,12.2,2.6,0.3,0.1,1.1
+
+      Example 3 (Meat):
+      Item: "chicken breast, grilled"
+      Output: 165,0.0,0.0,0.0,3.6,1.0,31.0
+
+      Item: "$foods"
+      Output:""";
+  }
+
+
+  static String getFreeTextDiaryInstruction(String foods){
     return
     """
-      Give me your best estimation for the calories contained in 100 grams of the food $foods.
+      Parse food inputs to JSON array.
+      Keys: "romanian", "english", "grams" (numeric weight). Convert all numeric values to grams.
 
-      RULES:
-      1. ONLY return a JSON object.
-      2. EVERY value MUST be a plain number (e.g., 150.0). NEVER include words like "potato", "rice", "g", or "kcal".
-      3. Estimated values are for 100g of the food.
+      Example:
+      Input: "150g orez fiert, 1 tbs sugar"
+      Output: [{"romanian":"orez fiert","english":"boiled rice","grams":150},{"romanian":"zahar","english":"sugar","grams":12.5}]
 
-      EXAMPLE:
-      FOOD: 100g cooked rice
-      JSON:
-      {
-        "calories": 130.0,
-        "carbs": 28.0,
-        "sugars": 0.1,
-        "fiber": 0.4,
-        "fat": 0.3,
-        "saturated_fat": 0.1,
-        "protein": 2.7
-      }
-
-      FOOD: $foods
-      JSON:
-      {
+      Input: "$foods"
+      Output: [
     """;
   }
 

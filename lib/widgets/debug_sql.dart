@@ -13,19 +13,10 @@ class SqlConsoleWidget extends StatefulWidget {
 class _SqlConsoleWidgetState extends State<SqlConsoleWidget> {
   final TextEditingController _queryController = TextEditingController(
     text: '''
-      SELECT 
-        date(diary_entries.date) as date,
-        SUM(diary_entries.calories) as calories,
-        SUM(diary_entries.carbs) as carbs,
-        SUM(diary_entries.sugars) as sugars,
-        SUM(diary_entries.fiber) as fiber,
-        SUM(diary_entries.fat) as fat,
-        SUM(diary_entries.saturated_fat) as saturatedFat,
-        SUM(diary_entries.protein) as protein
-      FROM diary_entries
-      WHERE date(diary_entries.date) >= ? AND date(diary_entries.date) < ?
-      GROUP BY date(diary_entries.date)
-      ORDER BY date ASC;
+     SELECT * FROM foods
+      WHERE foods MATCH ? 
+      ORDER BY rank 
+      LIMIT 5
     ''',
   );
   String _resultOutput = '';
@@ -122,7 +113,7 @@ class _SqlConsoleWidgetState extends State<SqlConsoleWidget> {
             // 2. RUN BUTTON & SHORTCUT CHIPS
             Row(
               children: [
-                ElevatedButton.icon(
+                FilledButton.icon(
                   onPressed: _isLoading ? null : () => _executeQuery(),
                   icon: _isLoading
                       ? const SizedBox(

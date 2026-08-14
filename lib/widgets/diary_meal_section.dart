@@ -1,6 +1,17 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gemma/flutter_gemma_interface.dart';
+import 'package:local_ai_calorie_app/model/food.dart';
 import 'package:local_ai_calorie_app/services/database_service.dart';
+import 'package:local_ai_calorie_app/services/food_parser.dart';
+import 'package:local_ai_calorie_app/services/local_ai_service.dart';
 import 'package:local_ai_calorie_app/widgets/diary_add_modal.dart';
+import 'package:local_ai_calorie_app/widgets/diary_add_multiple.dart';
+import 'package:local_ai_calorie_app/widgets/reusables/app_loading.dart';
+import 'package:local_ai_calorie_app/widgets/reusables/app_notification.dart';
+import 'package:local_ai_calorie_app/widgets/reusables/text_input_dialog.dart';
 
 import '../model/diary_entry.dart';
 import 'diary_row.dart';
@@ -60,9 +71,105 @@ class _DiarySectionState extends State<DiarySection> {
     refresh();
     widget.onAddPressed();
   }
-  
-  void addFoodFromText() {
 
+  void addFoodFromText() async {
+    try {
+      
+      if (!mounted) return;
+
+      final result = await InputDialog.show(
+        context,
+        title: 'Edit Prompt',
+        hintText: 'Enter food separated by a comma, ex: cucumber 100g, canola oil 5g, sugar 1 tbsp',
+        minLines: 5,
+      );
+
+      if (result == null || result.trim().isEmpty) {
+        return;
+      }
+
+      if (!mounted) return;
+      LoadingDialog.show(context, message: 'Processing text...');
+
+      FoodParserService parser = FoodParserService();
+      await parser.initialize();
+      final parsedFoods = await parser.parseFoodInput(result);
+
+      List<(List<Food>, double)> foodsIdentified = <(List<Food>, double)>[];
+
+      for (final parsedFood in parsedFoods){
+        final foodsFound = await DatabaseHelper.instance.searchFoodFTS("${parsedFood["english"]} ${parsedFood["romanian"]}");
+        double newGrams = double.tryParse(parsedFood["grams"].toString()) ?? 100;
+        if (foodsFound.isNotEmpty) foodsIdentified.add((foodsFound, newGrams));
+      }
+
+      if (foodsIdentified.isNotEmpty && mounted) {
+
+        final selectedFoods = foodsIdentified.map((f) => f.$1.first).toList();
+        final controllers = foodsIdentified.map((f) => TextEditingController(text: f.$2.toStringAsFixed(0))).toList();
+            
+        final bool? saved = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            titlePadding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Edit identified foods', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => Navigator.pop(context, false),
+                ),
+              ],
+            ),
+            content: DiaryAddMultiple(
+              foodsIdentified: foodsIdentified,
+              selectedFoods: selectedFoods,
+              controllers: controllers,
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true), // Just pass true!
+                child: const Text('Save All'),
+              ),
+            ],
+          ),
+        );
+
+        if (saved == true) {
+          for (int i = 0; i < foodsIdentified.length; i++) {
+            final Food food = selectedFoods[i];
+            final double grams = double.tryParse(controllers[i].text) ?? 0.0;
+            
+            var entry = DiaryEntry.fromFood(food: food, date: widget.selectedDate, mealType: widget.mealType);
+            entry.grams = grams;
+            entry.calculateAllValuesFromGrams();
+
+            await DatabaseHelper.instance.insertEntry(entry);
+          }
+        }
+        
+        if (saved == true) refresh();
+
+        // Clean up controllers
+        for (var c in controllers) {
+          c.dispose();
+        }
+      }
+
+    } catch (e) {
+      if (mounted) {
+        AppNotification.showError('Something went wrong: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        LoadingDialog.hide();
+      }
+    }
   }
 
   void onRowTapped(DiaryEntry entry) async {

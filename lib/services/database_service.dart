@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/rendering.dart';
 import 'package:local_ai_calorie_app/model/diary_entry.dart';
 import 'package:local_ai_calorie_app/model/food.dart';
+import 'package:local_ai_calorie_app/model/settings.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseHelper {
   //Private constructor for Singleton pattern
@@ -19,14 +24,30 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'calorie_tracker.db');
 
-    final db = await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-      onOpen: _onOpen,
+    // Obținem folderul oficial de date al aplicației pe telefon
+    final appDocDir = await getApplicationDocumentsDirectory();
+    
+    // Creăm o cale sigură în stocarea internă a aplicației
+    final String dbPath = join(appDocDir.path, 'calorie_tracker.db');
+
+    // CRUCIAL: Creăm directorul fizic dacă nu există pentru a preveni "Read-only file system"
+    final File dbFile = File(dbPath);
+    if (!await dbFile.parent.exists()) {
+      await dbFile.parent.create(recursive: true);
+    }
+
+    // final dbFolder = await getDatabasesPath();
+    // final path = join(dbFolder, 'calorie_tracker.db');
+    // await Directory(dbFolder).create(recursive: true);
+
+    final db = await databaseFactoryFfi.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: _onCreate,
+        onOpen: _onOpen,
+      ),
     );
 
     return db;
@@ -74,17 +95,63 @@ class DatabaseHelper {
         protein REAL
       )
     ''');
+
+    await db.execute('''
+      CREATE VIRTUAL TABLE foods_fts USING fts5(
+        id UNINDEXED,
+        name,
+        tokenize = 'porter unicode61'
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        caloriesMin REAL,
+        caloriesMax REAL,
+        carbsMin REAL,
+        carbsMax REAL,
+        sugarsMin REAL,
+        sugarsMax REAL,
+        fiberMin REAL,
+        fiberMax REAL,
+        fatMin REAL,
+        fatMax REAL,
+        saturatedfatMin REAL,
+        saturatedfatMax REAL,
+        proteinMin REAL,
+        proteinMax REAL,
+        weightGoal REAL
+      )
+    ''');
   }
 
-  Future<void> _onOpen(Database db) async {    
-    await addColumnIfNotExists(db, "diary_entries", "foodCalories", "REAL");
-    await addColumnIfNotExists(db, "diary_entries", "foodGrams", "REAL");
-    await addColumnIfNotExists(db, "diary_entries", "foodCarbs", "REAL");
-    await addColumnIfNotExists(db, "diary_entries", "foodSugars", "REAL");
-    await addColumnIfNotExists(db, "diary_entries", "foodFiber", "REAL");
-    await addColumnIfNotExists(db, "diary_entries", "foodFat", "REAL");
-    await addColumnIfNotExists(db, "diary_entries", "foodSaturated_fat", "REAL");
-    await addColumnIfNotExists(db, "diary_entries", "foodProtein", "REAL");
+  Future<void> _onOpen(Database db) async {
+
+    // await db.rawInsert('''
+    //   drop table foods_fts
+    // ''');
+
+    // await db.execute('''
+    //   CREATE VIRTUAL TABLE foods_fts USING fts5(
+    //     id UNINDEXED,
+    //     name,
+    //     tokenize = 'porter unicode61'
+    //   )
+    // ''');
+    
+    // await db.rawInsert('''
+    //   insert into foods_fts(id ,name)
+    //   select id, name from foods
+    // ''');
+    // await addColumnIfNotExists(db, "diary_entries", "foodCalories", "REAL");
+    // await addColumnIfNotExists(db, "diary_entries", "foodGrams", "REAL");
+    // await addColumnIfNotExists(db, "diary_entries", "foodCarbs", "REAL");
+    // await addColumnIfNotExists(db, "diary_entries", "foodSugars", "REAL");
+    // await addColumnIfNotExists(db, "diary_entries", "foodFiber", "REAL");
+    // await addColumnIfNotExists(db, "diary_entries", "foodFat", "REAL");
+    // await addColumnIfNotExists(db, "diary_entries", "foodSaturated_fat", "REAL");
+    // await addColumnIfNotExists(db, "diary_entries", "foodProtein", "REAL");
   }
 
   Future<bool> addColumnIfNotExists(Database db, String tableName, String columnName, String columnType) async {
@@ -103,11 +170,13 @@ class DatabaseHelper {
 
   Future<int> insertFood(Food food) async {
     final db = await database;
+    await db.insert('foods_fts', food.toMap_FTS());
     return await db.insert('foods', food.toMap());
   }
 
   Future<void> updateFood(Food food) async {
     final db = await database;
+    await db.update('foods', food.toMap_FTS(), where: "id = ${food.id}");
     await db.update('foods', food.toMap(), where: "id = ${food.id}");
   }
 
@@ -248,5 +317,71 @@ class DatabaseHelper {
       saturatedFat: (row['saturatedFat'] as num?)?.toDouble() ?? 0.0,
       protein: (row['protein'] as num?)?.toDouble() ?? 0.0,
     )).toList();
+  }
+
+
+  Future<Settings> getSettings() async {
+    final db = await database;
+    
+    final maps = await db.query(
+      'settings',
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+    return maps.map((map) => Settings.fromMap(map)).toList().first;
+  }
+  
+  Future<double?> getSetting(String key) async {
+    final db = await database;
+    final result = await db.query(
+      'settings',
+      columns: [key],
+      where: 'id = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return result.first[key] as double?;
+    }      
+    return null; // Value not found
+  }
+
+  Future<void> updateSetting(String key, int newValue) async {
+    final db = await instance.database;
+
+    await db.rawInsert(
+      '''
+      INSERT INTO settings (id) 
+      VALUES (?) 
+      ON CONFLICT(id) DO NOTHING
+      ''',
+      [1],
+    );
+
+    await db.update(
+      'settings',
+      {key: newValue},            // Updates ONLY the 'value' column
+      where: 'id = ?',              // Targets the row matching this setting key
+      whereArgs: [1],
+    );
+  }
+
+  Future<List<Food>> searchFoodFTS(String query) async {
+    final db = await instance.database;
+
+    final cleaned = query.split(RegExp(r'\s+')).map((word) => '$word').join(' OR ');
+    
+    // MATCH search handles tokenization, root words, and word order automatically
+    final rawList = await db.rawQuery('''
+      SELECT f.* 
+      FROM foods f
+      JOIN foods_fts fts ON f.id = fts.id
+      WHERE foods_fts MATCH ?
+      ORDER BY rank
+      LIMIT 30
+    ''', [cleaned]);
+
+    return rawList.map((json) => Food.fromMap(json)).toList();
   }
 }
