@@ -152,13 +152,13 @@ class _DiarySectionState extends State<DiarySection> {
             await DatabaseHelper.instance.insertEntry(entry);
           }
         }
-        
-        if (saved == true) refresh();
-
         // Clean up controllers
         for (var c in controllers) {
           c.dispose();
         }
+
+        if (saved == true) refresh();
+        widget.onAddPressed();
       }
 
     } catch (e) {

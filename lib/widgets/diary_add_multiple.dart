@@ -55,15 +55,21 @@ class DiaryAddMultipleRow extends StatefulWidget {
 }
 
 class _DiaryAddMultipleRowState extends State<DiaryAddMultipleRow> {
-  
-  late Food selectedFood;
+  late Food _selectedFood;
 
   @override
   void initState() {
     super.initState();
-    selectedFood = widget.foods.first;
+    _selectedFood = widget.currentFood;
   }
 
+  @override
+  void didUpdateWidget(covariant DiaryAddMultipleRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentFood != widget.currentFood) {
+      _selectedFood = widget.currentFood;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +81,7 @@ class _DiaryAddMultipleRowState extends State<DiaryAddMultipleRow> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<Food>(
                 isExpanded: true,
-                value: widget.currentFood,
+                value: _selectedFood,
                 items: widget.foods.map((Food option) {
                   return DropdownMenuItem<Food>(
                     value: option,
@@ -88,15 +94,16 @@ class _DiaryAddMultipleRowState extends State<DiaryAddMultipleRow> {
                 }).toList(),
                 onChanged: (Food? newValue) {
                   if (newValue != null) {
-                    setState(() => widget.onFoodChanged(newValue));
+                    setState(() {
+                      _selectedFood = newValue;
+                    });
+                    widget.onFoodChanged(newValue);
                   }
                 },
               ),
             ),
           ),
-
           const SizedBox(width: 12),
-          
           SizedBox(
             width: 85,
             child: TextField(
