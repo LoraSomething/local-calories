@@ -15,7 +15,7 @@ Built as a personal project. It isn't published on any app store.
 - **Label scanning:** take a photo or pick one from the gallery, and Gemma extracts the nutritional values from the label.
 - **Validate before saving:** parsed values are shown in an editable form, so you always confirm or correct them before they are stored.
 - **Manual entry:** add foods with the same form, no scanning required.
-- **Quick estimates:** type a simple food like "banana" or "avocado" and get an on-the-fly nutritional estimate from the model.
+- **Quick estimates:** type a simple food like "banana", "avocado" or "fried chicken" and get an on-the-fly nutritional estimate from the model.
 - **Daily report:** a summary of what you ate today.
 - **Weekly report:** work in progress.
 - **Fully local:** data is stored in SQLite on the device, and inference runs on the phone.
@@ -34,22 +34,21 @@ On-device inference is slow enough that output length matters a lot. Early versi
 ## Tech stack
 
 - Flutter / Dart
-- Gemma 4 E2B (`gemma-4-E2B-it.litertlm`), running fully on-device
-- Flutter Gemma
+- Gemma 4 E2B (`gemma-4-E2B-it.litertlm`), running fully on-device (flutter_gemma package)
 - SQLite for local storage
 
 ## Setup (if you want to install it)
 
 The app isn't published on any app store, so you need to build it yourself on a computer and install it on an Android phone.
 
-> **Model not included.** The Gemma model must be downloaded separately and is subject to Google's Gemma terms of use. Download `gemma-4-E2B-it.litertlm` from Kaggle/HuggingFace.
+> **Model not included.** The Gemma model must be downloaded separately and is subject to Google's Gemma terms of use. Search for `gemma-4-E2B-it.litertlm` on Kaggle or Hugging Face.
 
 ### 1. Build the app (on a PC)
 
 **Requirements:** Flutter SDK 3.44, Android SDK (installed with Android Studio), and `flutter doctor` reporting no Android issues.
 
 ```bash
-git clone [repo URL]
+git clone https://github.com/LoraSomething/local-calories
 cd [repo folder]
 flutter pub get
 flutter build apk --release
